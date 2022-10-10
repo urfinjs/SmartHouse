@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+  <title>Затворка</title>
+</head>
+
+<body>
+  <div class="container text-center">
+    <div class="row">
+      <div class="col input-group mb-3">
+        <a href="/" class="btn btn-info form-control" role="button">Вернуться в меню</a>
+      </div>
+    </div>
+
+    <form action="/servo_timer" method="POST" onsubmit="return validateDates();">
+      <div class="row">
+        <div class="col input-group mb-3">
+          <input type="number" name="hours_finish" min="0" max="23" placeholder="часов" class="form-control">
+          <input type="number" name="minutes_finish" min="0" max="59" placeholder="минут" class="form-control">
+          <input type="number" name="servo_finish_position" min="0" max="100" placeholder="затворка" class="form-control">
+          <input type="submit" value="Назначить" class="btn btn-primary form-control">
+        </div>
+      </div>
+    </form>
+
+    {% if (timers[0]|int) == 1 %}
+      {% set hours = (timers[1]|int / 1000 / 60) | int %}
+      {% set minutes = (timers[1]|int / 1000 % 60) | int %}
+
+      <div class="row">
+        <div class="col input-group mb-3">
+          <span class="input-group-text form-control justify-content-center text-center">Текущая задача</span>
+        </div>
+      </div>
+
+      <form action="/servo_timer" method="POST">
+      <div class="row">
+        <div class="col input-group mb-3">
+          <input type="text" value="{{ hours }} ч" min="0" max="23" disabled class="form-control">
+          <input type="text" value="{{ minutes }} м" min="0" max="59" disabled class="form-control">
+          <input type="text" value="{{ timers[2] }} %" min="0" max="100" disabled class="form-control">
+          <input type="submit" name="deactivate_job" value="Удалить" class="btn btn-primary form-control">
+        </div>
+      </div>
+      </form>
+    {% endif %}
+
+  </div>
+</body>
+
+<script>
+validateDates = function() {
+  var input_fields = document.getElementsByTagName("input");
+  for (var i = 0; i < input_fields.length - 1; i++) {
+    if (!input_fields[i].value) {
+      alert("Должны быть заполнены все поля.");
+      return false;
+    }
+  }
+  return true;
+}
+</script>
+</html>

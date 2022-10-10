@@ -1,0 +1,6 @@
+flask
+flask-login
+pyopenssl
+toml
+paho-mqtt
+matplotlib

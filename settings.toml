@@ -1,0 +1,18 @@
+broker = '127.0.0.1'
+port = 0
+topics = [
+    "pressure_target",
+    "pressure_current",
+    "Control_ON",
+    "servo_on",
+    "LitrFloat",
+    "SumL",
+    "pol1",
+    "period_na_dv",
+    "pol2",
+    "flag_plavnoe_upr",
+    "resetSumL",
+    "savedSumL"
+]
+username = ''
+password = ''

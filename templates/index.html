@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+  <title>List</title>
+</head>
+
+<body>
+  <div class="container text-center">
+    <div class="row">
+      <div class="col input-group mb-3">
+        <span class="input-group-text">Текущее давление</span>
+        <input type="number" value="0" class="form-control text-center" id="pressureDisplayField" disabled>
+      </div>
+    </div>
+
+    <form action="/" method="POST">
+    <div class="row">
+      <div class="col input-group mb-3">
+        <label for="pressure_target">
+          <span class="input-group-text">Назначить давление</span>
+        </label>
+        <input type="number" id="pressure_target" name="{{ topics[0] }}" min="0" max="60" placeholder="число" class="form-control text-center">
+        <input type="submit" value="Назначить" class="btn btn-primary">
+      </div>
+    </div>
+    </form>
+
+    <div class="row">
+      <div class="col input-group mb-3">
+        <span class="input-group-text">Текущая цель по давлению:</span>
+        <input type="number" value="{{ topics_values[0] }}" class="form-control text-center" disabled>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col input-group mb-3">
+        <span class="input-group-text">л/мин</span>
+        <input type="number" value="0" class="form-control text-center" id="waterDisplayField" disabled>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col input-group mb-3">
+        <span class="input-group-text">Разовый расходомер</span>
+        <input type="number" value="0" class="form-control text-center" id="waterSumCounterDisplayField" disabled>
+        <button id="resetCounter" type="button" class="btn btn-primary">Reset</button>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col input-group mb-3">
+        <span class="input-group-text">Всего литров</span>
+        <input type="number" value="0" class="form-control text-center" id="waterSumDisplayField" disabled>
+        <button id="fullResetCounter" type="button" class="btn btn-primary">Reset</button>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col input-group mb-3">
+        <span class="input-group-text">Положение затворки</span>
+        <input type="number" value="0" class="form-control text-center" id="servoPol1DisplayField" disabled>
+        {% if (topics_values[9]|int) == 0 %}
+          <a href="/servo_timer" class="btn btn-info" role="button">Задать</a>
+        {% else %}
+          <a href="/servo_timer" class="btn btn-warning" role="button">Задать</a>
+        {% endif %}
+      </div>
+    </div>
+
+  <form action="/" method="POST">
+    {% if (topics_values[2]|int) == 0 %}
+      <div class="row">
+        <div class="col input-group mb-3">
+          <span class="input-group-text">Автоуправление</span>
+          <input type="submit" name="{{ topics[2] }}" value="Выключено"
+            class="btn btn-primary form-control">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col input-group mb-3">
+          <span class="input-group-text">Затворка</span>
+          {% if (topics_values[3]|int) == 0 %}
+            <input type="submit" name="{{ topics[3] }}" value="Закрыта" class="btn btn-danger form-control">
+          {% else %}
+            <input type="submit" name="{{ topics[3] }}" value="Открыта" class="btn btn-primary form-control"
+                   onclick="confirmation_to_close(event);">
+          {% endif %}
+        </div>
+      </div>
+
+    {% else %}
+      <div class="row">
+        <div class="col input-group mb-3">
+          <span class="input-group-text">Автоуправление</span>
+          <input type="submit" name="{{ topics[2] }}" value="Включено"
+            class="btn btn-success form-control">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col input-group mb-3">
+        <span class="input-group-text">Затворка</span>
+        <input type="submit" name="{{ topics[3] }}"
+          value="{% if (topics_values[3]|int == 0) %}Закрыта{% else %}Открыта{% endif %}"
+          class="btn btn-secondary form-control" disabled>
+        </div>
+      </div>
+    {% endif %}
+  </form>
+
+  <div>
+    <br>
+    <a href="/plot.png">
+      <img src="/plot.png" alt="статистика давления" class="form-control">
+    </a>
+  </div>
+  </div>
+</body>
+
+<script>
+function confirmation_to_close(e) {
+  if(!confirm('Закрыть затворку?')) {
+    e.preventDefault();
+  }
+}
+
+
+const waterSumURL = {{ url_for('water_sum_get')|tojson }}
+
+var waterSumCounterDisplayField = document.getElementById('waterSumCounterDisplayField');
+var waterSumCurrent = 0;
+var waterSumCountingPoint = {% if (topics_values[11]) %}{{ topics_values[11] }}{% else %}0.0{% endif %}
+var waterSumCounter = null;
+
+const pressureURL = {{ url_for('pressure_get')|tojson }}
+var pressureDisplayField = document.getElementById('pressureDisplayField');
+
+const waterURL = {{ url_for('water_get')|tojson }}
+var waterDisplayField = document.getElementById('waterDisplayField');
+
+const servoPol1URL = {{ url_for('servo_position1_get')|tojson }}
+var servoPol1DisplayField = document.getElementById('servoPol1DisplayField');
+
+
+function displayDataFromEndpoint(endpoint, displayField) {
+  fetch(endpoint)
+    .then(resp => resp.json())
+    .then(r => {
+      displayField.value = r['data'];
+    })
+}
+
+function fetchWaterSum(isCountingPoint) {
+  fetch(waterSumURL)
+    .then(resp => resp.json())
+    .then(r => {
+      var liters = ~~(parseFloat(r['data']));
+      waterSumCurrent = liters;
+
+      if (isCountingPoint) {
+        waterSumCountingPoint = liters;
+        console.log("counting from: " + waterSumCountingPoint);
+
+        const request = new XMLHttpRequest();
+        request.open('POST', `/water_sum_save/${parseInt(waterSumCountingPoint, 10)}`);
+        request.send();
+      }
+    })
+}
+
+function countingWaterSum(){
+  fetchWaterSum(false);
+  waterSumCounterDisplayField.value = waterSumCurrent - waterSumCountingPoint;
+}
+
+function resetWaterSumCounter() {
+  if(waterSumCounter !== null) {
+    clearInterval(waterSumCounter);
+  }
+
+  waterSumCurrent = 0;
+
+  fetchWaterSum(true);
+  waterSumCounter = setInterval(countingWaterSum, 1000);
+}
+
+function fullResetWaterSumCounter() {
+  if(!confirm('Сбросить счетчик литров?')) {
+    return;
+  }
+
+  const request_reset = new XMLHttpRequest();
+  request_reset.open('POST', '/water_sum_reset/1');
+  request_reset.send();
+
+  const request_save = new XMLHttpRequest();
+  request_save.open('POST', '/water_sum_save/0');
+  request_save.send();
+
+  waterSumCurrent = 0;
+  waterSumCountingPoint = 0;
+  waterSumCounter = setInterval(countingWaterSum, 1000);
+}
+
+document.getElementById('resetCounter').addEventListener('click', resetWaterSumCounter);
+document.getElementById('fullResetCounter').addEventListener('click', fullResetWaterSumCounter);
+
+waterSumCounter = setInterval(countingWaterSum, 1000);
+
+setInterval(displayDataFromEndpoint, 1000, pressureURL, pressureDisplayField);
+setInterval(displayDataFromEndpoint, 1000, waterURL, waterDisplayField);
+setInterval(displayDataFromEndpoint, 1000, waterSumURL, waterSumDisplayField);
+setInterval(displayDataFromEndpoint, 1000, servoPol1URL, servoPol1DisplayField);
+</script>
+</html>

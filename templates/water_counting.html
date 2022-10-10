@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+  div {
+    text-align: center;
+  }
+  .buttons{
+    width: 100%;
+    justify-content: space-around;
+  }
+  .buttons button{
+      width: 120px;
+      height: 45px;
+      background-color: #205e94;
+      color: #ffffff;
+      border: none;
+      font-family: 'Poppins',sans-serif;
+      font-size: 18px;
+      border-radius: 5px;
+      cursor: pointer;
+      outline: none;
+  }
+  .sumDisplay{
+    background: #ffffff;
+    font-family: 'Roboto mono',monospace;
+    color: #0381bb;
+    font-size: 40px;
+    align-items: center;
+    justify-content: space-around;
+    border-radius: 5px;
+    box-shadow: 0 0 20px rgba(0,139,253,0.25);
+}
+
+  </style>
+</head>
+
+<body>
+  <div>
+    <h2><a href="/">вернуться в меню</a></h2>
+    <br>
+    <div class="buttons">
+      <button id="startCounter">Start</button>
+      <button id="stopCounter">Stop</button>
+    </div>
+    <br>
+    <div class="sumDisplay">0</div>
+  </div>
+</body>
+<script>
+const liters_url = {{ url_for('water_sum_get')|tojson }}
+
+var sum_display_field = document.querySelector('.sumDisplay');
+var liters_sum_current = 0;
+var liters_from_start = 0;
+var counter = null;
+
+
+function fetch_liters_sum_current(set_starting_point) {
+  fetch(liters_url)
+    .then(resp => resp.json())
+    .then(r => {
+      var liters = ~~(parseFloat(r['current_liters_sum']));
+      liters_sum_current = liters;
+
+      if (set_starting_point) {
+        liters_from_start = liters;
+        console.log("set_starting_point: " + liters_from_start);
+      }
+    })
+}
+
+document.getElementById('startCounter').addEventListener('click', ()=> {
+  if(counter !== null) {
+    clearInterval(counter);
+  }
+
+  fetch_liters_sum_current(true);
+  counter = setInterval(counting_liters, 1000);
+});
+
+document.getElementById('stopCounter').addEventListener('click', ()=>{
+  clearInterval(counter);
+  liters_sum_current = 0;
+});
+
+function counting_liters(){
+  fetch_liters_sum_current(false);
+  sum_display_field.innerHTML = liters_sum_current - liters_from_start;
+}
+</script>
+</html>
