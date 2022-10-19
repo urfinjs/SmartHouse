@@ -395,7 +395,7 @@ if __name__ == '__main__':
 
     client.subscribe([(t, QoS) for t in credentials['topics']])
 
-    app.run(host="0.0.0.0", ssl_context='adhoc', debug=False)
+    app.run(host="0.0.0.0", ssl_context='adhoc', debug=True)
 
     client.disconnect()
     client.loop_stop()
