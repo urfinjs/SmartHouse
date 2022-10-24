@@ -4,3 +4,4 @@ pyopenssl
 toml
 paho-mqtt
 matplotlib
+waitress
