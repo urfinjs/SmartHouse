@@ -12,15 +12,21 @@ import toml
 import sqlite3
 from pathlib import Path
 import logging
+from waitress import serve
 
 
-# https://www.hivemq.com/blog/mqtt-essentials-part-6-mqtt-quality-of-service-levels/
-QoS = 1 # 0, 1, 2
+USERS = {'admin': {
+    'password': "secret"
+}}
 
+
+logging.getLogger('werkzeug').setLevel(logging.WARNING)
+plt.switch_backend('agg')
+
+QoS = 1 # 0, 1, 2 https://www.hivemq.com/blog/mqtt-essentials-part-6-mqtt-quality-of-service-levels/
 
 DB_PATH = Path(__file__).parent.joinpath("pressure.db")
-logging.getLogger('werkzeug').setLevel(logging.ERROR)
-plt.switch_backend('agg')
+db_connection = sqlite3.connect(DB_PATH, check_same_thread=False)
 
 with open("settings.toml") as fh:
     credentials = toml.load(fh)
@@ -149,11 +155,6 @@ def login():
     global USERS
 
     if request.method == 'GET':
-        # #DEBUG
-        # user = User('admin')
-        # login_user(user, remember=True)
-        # return redirect("/")
-        # #DEBUG
         return render_template("login.html")
 
     password = request.form.get('password')
@@ -383,11 +384,9 @@ def sensor_servo_timer():
 
 
 if __name__ == '__main__':
-    USERS = {'admin': {'password': 'secret'}}
     if len(sys.argv) == 2:
         USERS['admin']['password'] = sys.argv[1]
 
-    db_connection = sqlite3.connect(DB_PATH, check_same_thread=False)
     create_db_if_not_exist()
 
     client = connect_mqtt()
@@ -395,7 +394,8 @@ if __name__ == '__main__':
 
     client.subscribe([(t, QoS) for t in credentials['topics']])
 
-    app.run(host="0.0.0.0", ssl_context='adhoc', debug=True)
+    # app.run(host="0.0.0.0", ssl_context=('cert.pem', 'key.pem'))
+    serve(app, host='0.0.0.0', port=5000, url_scheme='https')
 
     client.disconnect()
     client.loop_stop()
