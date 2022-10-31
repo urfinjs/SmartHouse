@@ -16,6 +16,25 @@
       </div>
     </div>
 
+    <div class="row">
+      <div class="col input-group mb-3">
+        <span class="input-group-text">Положение затворки</span>
+        <input type="number" value="0" class="form-control text-center" id="servoPol1DisplayField" disabled>
+        {% if (topics_values[9]|int) == 0 %}
+          <a href="/servo_timer" class="btn btn-info" role="button">Задать</a>
+        {% else %}
+          <a href="/servo_timer" class="btn btn-warning" role="button">Задать</a>
+        {% endif %}
+      </div>
+    </div>
+    
+    <div class="row">
+      <div class="col input-group mb-3">
+        <span class="input-group-text">л/мин</span>
+        <input type="number" value="0" class="form-control text-center" id="waterDisplayField" disabled>
+      </div>
+    </div>
+
     <form action="/" method="POST">
     <div class="row">
       <div class="col input-group mb-3">
@@ -27,18 +46,10 @@
       </div>
     </div>
     </form>
-
     <div class="row">
       <div class="col input-group mb-3">
         <span class="input-group-text">Текущая цель по давлению:</span>
         <input type="number" value="{{ topics_values[0] }}" class="form-control text-center" disabled>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col input-group mb-3">
-        <span class="input-group-text">л/мин</span>
-        <input type="number" value="0" class="form-control text-center" id="waterDisplayField" disabled>
       </div>
     </div>
 
@@ -55,18 +66,6 @@
         <span class="input-group-text">Всего литров</span>
         <input type="number" value="0" class="form-control text-center" id="waterSumDisplayField" disabled>
         <button id="fullResetCounter" type="button" class="btn btn-primary">Reset</button>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col input-group mb-3">
-        <span class="input-group-text">Положение затворки</span>
-        <input type="number" value="0" class="form-control text-center" id="servoPol1DisplayField" disabled>
-        {% if (topics_values[9]|int) == 0 %}
-          <a href="/servo_timer" class="btn btn-info" role="button">Задать</a>
-        {% else %}
-          <a href="/servo_timer" class="btn btn-warning" role="button">Задать</a>
-        {% endif %}
       </div>
     </div>
 
